@@ -17,4 +17,8 @@
         </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\Library.Persistence\Library.Persistence.csproj" />
+    </ItemGroup>
+
 </Project>
