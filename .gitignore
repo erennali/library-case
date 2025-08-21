@@ -1,0 +1,67 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+## IDE - JetBrains Rider
+# Rider'ın projeye özel ayarlarını, geçmişini ve çalışma alanı durumunu içerir.
+# Bu dosyalar her kullanıcı için farklıdır ve paylaşılmamalıdır.
+.idea/
+
+## IDE - Visual Studio
+# Ekipte Visual Studio kullananlar olabilir, onlar için de ekleyelim.
+.vs/
+*.suo
+*.user
+
+## IDE - VS Code
+# VS Code kullananlar için.
+.vscode/
+
+## İşletim Sistemi Dosyaları
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# macOS
+.DS_Store
+._*
+
+## .NET Core Build Çıktıları ve Geçici Dosyalar
+# Bu dosyalar `dotnet build` veya `dotnet run` komutlarıyla her seferinde yeniden oluşur.
+# Repoda yer kaplamamalı ve merge conflict'lere yol açmamalıdır.
+**/[Bb]in/
+**/[Oo]bj/
+**/Properties/PublishProfiles/
+
+## Nuget Paketleri
+# Paketler `dotnet restore` komutu ile indirilir. Sadece proje bağımlılıkları (`.csproj`) reponuzda olmalıdır.
+*.nupkg
+*.nuget.props
+*.nuget.targets
+
+## Kullanıcıya Özel ve Hassas Yapılandırma Dosyaları
+# Bu dosyalar genellikle yerel veritabanı bağlantıları veya API anahtarları gibi
+# kişiye özel veya gizli bilgiler içerir. `appsettings.json` ana şablon olarak
+# reponuzda bulunmalı, ancak kişisel ayarlarınız dışarıda kalmalıdır.
+appsettings.*.json
+!appsettings.json
+*.secrets.json
+secrets.json
+.env
+
+## Log ve Test Dosyaları
+# Çalışma zamanında oluşan log'lar ve test sonuçları repoya eklenmemelidir.
+*.log
+TestResults/
+*.coverage
+*.coveragereport
+
+## Diğer
+# Visual Studio test sertifikası
+*.pfx
+*.pubxml
+
+# ReSharper geçici dosyaları (Rider veya ReSharper for VS kullananlar için)
+_ReSharper*/
+*.[Rr]e[Ss]harper
