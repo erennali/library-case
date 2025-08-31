@@ -1,11 +1,5 @@
-using AutoMapper;
-using Library.Application.Books.Commands;
-using Library.Application.Books.DTOs;
-using Library.Application.Books.Queries;
-using Library.Application.Books.Validation;
 using Library.Application.Abstractions.Services;
 using Library.Domain.Entities;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Library.API.Controllers;
@@ -14,60 +8,49 @@ namespace Library.API.Controllers;
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly IMapper _mapper;
+    private readonly IBookService _bookService;
 
-    public BooksController(IMediator mediator, IMapper mapper)
+    public BooksController(IBookService bookService)
     {
-        _mediator = mediator;
-        _mapper = mapper;
+        _bookService = bookService;
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<BookResponseDto>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<Book>> GetById(int id, CancellationToken ct)
     {
-        var response = await _mediator.Send(new GetBookByIdQuery(id), ct);
-        if (response is null) return NotFound();
-        return Ok(response);
+        var book = await _bookService.GetAsync(id, ct);
+        if (book == null)
+            return NotFound();
+
+        return Ok(book);
     }
 
-    public record SearchRequest(int Page = 1, int PageSize = 10, string? Query = null, int? CategoryId = null);
-
     [HttpGet]
-    public async Task<ActionResult<object>> Search([FromQuery] SearchRequest req, CancellationToken ct)
+    public async Task<ActionResult<(IReadOnlyList<Book> Items, int TotalCount)>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] int? categoryId = null, CancellationToken ct = default)
     {
-        var result = await _mediator.Send(new SearchBooksQuery(req.Page, req.PageSize, req.Query, req.CategoryId), ct);
+        var result = await _bookService.SearchAsync(page, pageSize, search, categoryId, ct);
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<BookResponseDto>> Create([FromBody] BookCreateDto dto, CancellationToken ct)
+    public async Task<ActionResult<Book>> Create([FromBody] Book book, CancellationToken ct)
     {
-        var validator = new BookCreateDtoValidator();
-        var result = await validator.ValidateAsync(dto, ct);
-        if (!result.IsValid) return BadRequest(new ValidationProblemDetails(result.ToDictionary()));
-
-        var response = await _mediator.Send(new CreateBookCommand(dto), ct);
-        return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+        var createdBook = await _bookService.CreateAsync(book, ct);
+        return CreatedAtAction(nameof(GetById), new { id = createdBook.Id }, createdBook);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<BookResponseDto>> Update(int id, [FromBody] BookUpdateDto dto, CancellationToken ct)
+    public async Task<IActionResult> Update(int id, [FromBody] Book updatedBook, CancellationToken ct)
     {
-        var validator = new BookUpdateDtoValidator();
-        var result = await validator.ValidateAsync(dto, ct);
-        if (!result.IsValid) return BadRequest(new ValidationProblemDetails(result.ToDictionary()));
-
-        var response = await _mediator.Send(new UpdateBookCommand(id, dto), ct);
-        return Ok(response);
+        await _bookService.UpdateAsync(id, updatedBook, ct);
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        await _mediator.Send(new DeleteBookCommand(id), ct);
+        await _bookService.DeleteAsync(id, ct);
         return NoContent();
     }
 }
-
 

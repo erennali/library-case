@@ -14,6 +14,32 @@ builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddPersistence(builder.Configuration);
 
+// Configure JWT Authentication
+builder.Services.Configure<Library.Application.Configuration.JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
+builder.Services.Configure<Library.Application.Configuration.EmailSettings>(
+    builder.Configuration.GetSection("Email"));
+
+builder.Services.Configure<Library.Application.Configuration.AppSettings>(
+    builder.Configuration.GetSection("AppSettings"));
+
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "database", tags: new[] { "database", "sql", "ready" })
+    .AddCheck("storage", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Storage is healthy"), tags: new[] { "storage" });
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -24,7 +50,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Use CORS
+app.UseCors("AllowAll");
+
 app.MapControllers();
+
+// Map Health Checks
+app.MapHealthChecks("/health");
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

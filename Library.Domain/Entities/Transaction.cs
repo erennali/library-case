@@ -39,6 +39,7 @@ public class Transaction
     public Librarian? ProcessedByLibrarian { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation Properties
     public ICollection<Fine> Fines { get; set; } = new List<Fine>();

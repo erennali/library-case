@@ -36,6 +36,9 @@ public class Librarian
     [StringLength(100)]
     public string? Department { get; set; }
 
+    [StringLength(500)]
+    public string PasswordHash { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

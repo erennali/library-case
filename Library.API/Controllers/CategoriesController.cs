@@ -1,8 +1,6 @@
-using FluentValidation;
-using Library.Application.Categories.Commands;
-using Library.Application.Categories.DTOs;
-using Library.Application.Categories.Queries;
-using MediatR;
+using Library.Application.Abstractions.Services;
+using Library.Domain.Entities;
+using Library.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Library.API.Controllers;
@@ -11,48 +9,48 @@ namespace Library.API.Controllers;
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly ICategoryService _categoryService;
 
-    public CategoriesController(IMediator mediator)
+    public CategoriesController(ICategoryService categoryService)
     {
-        _mediator = mediator;
+        _categoryService = categoryService;
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<CategoryResponseDto>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<Category>> GetById(int id, CancellationToken ct)
     {
-        var res = await _mediator.Send(new GetCategoryByIdQuery(id), ct);
-        if (res is null) return NotFound();
-        return Ok(res);
+        var category = await _categoryService.GetAsync(id, ct);
+        if (category == null)
+            return NotFound();
+
+        return Ok(category);
     }
 
-    public record SearchRequest(int Page = 1, int PageSize = 10, string? Query = null, int? ParentCategoryId = null);
-
     [HttpGet]
-    public async Task<ActionResult<object>> Search([FromQuery] SearchRequest req, CancellationToken ct)
+    public async Task<ActionResult<(IReadOnlyList<Category> Items, int TotalCount)>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] int? parentCategoryId = null, CancellationToken ct = default)
     {
-        var res = await _mediator.Send(new SearchCategoriesQuery(req.Page, req.PageSize, req.Query, req.ParentCategoryId), ct);
-        return Ok(res);
+        var result = await _categoryService.SearchAsync(page, pageSize, search, parentCategoryId, ct);
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<CategoryResponseDto>> Create([FromBody] CategoryCreateDto dto, CancellationToken ct)
+    public async Task<ActionResult<Category>> Create([FromBody] Category category, CancellationToken ct)
     {
-        var created = await _mediator.Send(new CreateCategoryCommand(dto), ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var createdCategory = await _categoryService.CreateAsync(category, ct);
+        return CreatedAtAction(nameof(GetById), new { id = createdCategory.Id }, createdCategory);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<CategoryResponseDto>> Update(int id, [FromBody] CategoryUpdateDto dto, CancellationToken ct)
+    public async Task<IActionResult> Update(int id, [FromBody] Category updatedCategory, CancellationToken ct)
     {
-        var updated = await _mediator.Send(new UpdateCategoryCommand(id, dto), ct);
-        return Ok(updated);
+        await _categoryService.UpdateAsync(id, updatedCategory, ct);
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        await _mediator.Send(new DeleteCategoryCommand(id), ct);
+        await _categoryService.DeleteAsync(id, ct);
         return NoContent();
     }
 }

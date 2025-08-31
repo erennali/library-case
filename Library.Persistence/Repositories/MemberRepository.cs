@@ -43,12 +43,58 @@ public class MemberRepository : IMemberRepository
         return await query.CountAsync(cancellationToken);
     }
 
-    public Task AddAsync(Member member, CancellationToken cancellationToken = default)
-        => _dbContext.Members.AddAsync(member, cancellationToken).AsTask();
+    public async Task<Member?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Members
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Email == email, cancellationToken);
+    }
 
-    public void Update(Member member) => _dbContext.Members.Update(member);
+    public async Task<Member?> GetByMembershipNumberAsync(string membershipNumber, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Members
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.MembershipNumber == membershipNumber, cancellationToken);
+    }
 
-    public void Remove(Member member) => _dbContext.Members.Remove(member);
+    public async Task<Member> CreateAsync(Member member, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Members.Add(member);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return member;
+    }
+
+    public async Task<Member> UpdateAsync(Member member, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Members.Update(member);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return member;
+    }
+
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var member = await GetByIdAsync(id, cancellationToken);
+        if (member != null)
+        {
+            _dbContext.Members.Remove(member);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Members.AnyAsync(m => m.Id == id, cancellationToken);
+    }
+
+    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Members.AnyAsync(m => m.Email == email, cancellationToken);
+    }
+
+    public async Task<bool> ExistsByMembershipNumberAsync(string membershipNumber, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Members.AnyAsync(m => m.MembershipNumber == membershipNumber, cancellationToken);
+    }
 }
 
 

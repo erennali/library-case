@@ -45,6 +45,9 @@ public class Member
     public decimal TotalFinesOwed { get; set; } = 0;
     public decimal MaxFineLimit { get; set; } = 50;
 
+    [StringLength(500)]
+    public string PasswordHash { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

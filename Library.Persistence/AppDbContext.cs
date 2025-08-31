@@ -19,6 +19,12 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<LibrarySettings> LibrarySettings { get; set; }
+    public DbSet<Alert> Alerts { get; set; }
+    public DbSet<Report> Reports { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<ImportJob> ImportJobs { get; set; }
+    public DbSet<ExportJob> ExportJobs { get; set; }
+    public DbSet<ExportTemplate> ExportTemplates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

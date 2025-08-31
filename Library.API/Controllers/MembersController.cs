@@ -1,7 +1,6 @@
-using Library.Application.Members.Commands;
-using Library.Application.Members.DTOs;
-using Library.Application.Members.Queries;
-using MediatR;
+using Library.Application.Abstractions.Services;
+using Library.Domain.Entities;
+using Library.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Library.API.Controllers;
@@ -10,48 +9,60 @@ namespace Library.API.Controllers;
 [Route("api/[controller]")]
 public class MembersController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMemberService _memberService;
 
-    public MembersController(IMediator mediator)
+    public MembersController(IMemberService memberService)
     {
-        _mediator = mediator;
+        _memberService = memberService;
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<MemberResponseDto>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<Member>> GetById(int id, CancellationToken ct)
     {
-        var res = await _mediator.Send(new GetMemberByIdQuery(id), ct);
-        if (res is null) return NotFound();
-        return Ok(res);
+        var member = await _memberService.GetAsync(id, ct);
+        if (member == null)
+            return NotFound();
+
+        return Ok(member);
     }
 
-    public record SearchRequest(int Page = 1, int PageSize = 10, string? Query = null);
-
     [HttpGet]
-    public async Task<ActionResult<object>> Search([FromQuery] SearchRequest req, CancellationToken ct)
+    public async Task<ActionResult<(IReadOnlyList<Member> Items, int TotalCount)>> Search([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, CancellationToken ct = default)
     {
-        var res = await _mediator.Send(new SearchMembersQuery(req.Page, req.PageSize, req.Query), ct);
-        return Ok(res);
+        var result = await _memberService.SearchAsync(page, pageSize, search, ct);
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<MemberResponseDto>> Create([FromBody] MemberCreateDto dto, CancellationToken ct)
+    public async Task<ActionResult<Member>> Create([FromBody] Member member, CancellationToken ct)
     {
-        var created = await _mediator.Send(new CreateMemberCommand(dto), ct);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var createdMember = await _memberService.CreateAsync(member, ct);
+        return CreatedAtAction(nameof(GetById), new { id = createdMember.Id }, createdMember);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<MemberResponseDto>> Update(int id, [FromBody] MemberUpdateDto dto, CancellationToken ct)
+    public async Task<IActionResult> Update(int id, [FromBody] Member updatedMember, CancellationToken ct)
     {
-        var updated = await _mediator.Send(new UpdateMemberCommand(id, dto), ct);
-        return Ok(updated);
+        await _memberService.UpdateAsync(id, updatedMember, ct);
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        await _mediator.Send(new DeleteMemberCommand(id), ct);
+        await _memberService.DeleteAsync(id, ct);
+        return NoContent();
+    }
+
+    [HttpPost("extend-membership/{id:int}")]
+    public async Task<IActionResult> ExtendMembership(int id, [FromBody] ExtendMembershipRequest request, CancellationToken ct)
+    {
+        var member = await _memberService.GetAsync(id, ct);
+        if (member == null)
+            return NotFound();
+
+        member.MembershipEndDate = request.NewEndDate;
+        await _memberService.UpdateAsync(id, member, ct);
         return NoContent();
     }
 }

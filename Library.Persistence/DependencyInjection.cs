@@ -16,7 +16,23 @@ public static class DependencyInjection
         services.AddScoped<IBookRepository, BookRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<ILibrarianRepository, LibrarianRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // New repository registrations
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IFineRepository, FineRepository>();
+        services.AddScoped<IReservationRepository, ReservationRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IReportRepository, ReportRepository>();
+        services.AddScoped<IAlertRepository, AlertRepository>();
+        services.AddScoped<ISettingsRepository, SettingsRepository>();
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
+        services.AddScoped<ISearchRepository, SearchRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+        services.AddScoped<IAuditRepository, AuditRepository>();
+        services.AddScoped<IImportExportRepository, ImportExportRepository>();
 
         return services;
     }

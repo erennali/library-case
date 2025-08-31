@@ -34,7 +34,7 @@ public class MemberService : IMemberService
         if (string.IsNullOrWhiteSpace(member.Email)) throw new ArgumentException("Email is required");
         member.CreatedAt = DateTime.UtcNow;
         member.UpdatedAt = DateTime.UtcNow;
-        await _repo.AddAsync(member, cancellationToken);
+        await _repo.CreateAsync(member, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
         return member;
     }
@@ -59,16 +59,14 @@ public class MemberService : IMemberService
         existing.TotalFinesOwed = updated.TotalFinesOwed;
         existing.MaxFineLimit = updated.MaxFineLimit;
         existing.UpdatedAt = DateTime.UtcNow;
-        _repo.Update(existing);
+        await _repo.UpdateAsync(existing, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
         return existing;
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var existing = await _repo.GetByIdAsync(id, cancellationToken);
-        if (existing is null) return;
-        _repo.Remove(existing);
+        await _repo.DeleteAsync(id, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
     }
 }
